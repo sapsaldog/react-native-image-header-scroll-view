@@ -3,6 +3,7 @@ import React, {
   FunctionComponent,
   MutableRefObject,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -15,30 +16,38 @@ import {
   Dimensions,
   ImageSourcePropType,
   ScrollViewProps,
+  ImageStyle,
+  TextStyle,
+  ViewStyle,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 
-type Props = ScrollViewProps & {
-  children?: React.ElementType<any>;
-  childrenStyle?: any;
-  overlayColor: string;
-  foregroundParallaxRatio: number;
-  maxHeight: number;
-  maxOverlayOpacity: number;
-  minHeight: number;
-  minOverlayOpacity: number;
-  renderFixedForeground: () => React.ElementType<any>;
-  renderForeground?: () => React.ElementType<any>;
-  renderHeader: () => React.ElementType<any>;
-  foregroundExtrapolate: 'clamp' | 'extend' | 'identity' | undefined;
-  renderTouchableFixedForeground?: () => React.ElementType<any>;
-  ScrollViewComponent: React.ElementType<ScrollViewProps>;
-  scrollViewBackgroundColor: string;
-  headerImage?: ImageSourcePropType;
-  useNativeDriver: boolean;
-  headerContainerStyle?: Object;
-  fixedForegroundContainerStyles?: Object;
-  disableHeaderGrow?: boolean;
-};
+import { ImageHeaderContext, ImageHeaderContextType } from './context';
+
+type Props = React.PropsWithChildren<
+  ScrollViewProps & {
+    childrenStyle?: ViewStyle | TextStyle | ImageStyle;
+    overlayColor?: string;
+    foregroundParallaxRatio?: number; // defaults to 1
+    maxHeight?: number; // default is 80
+    minHeight?: number; // default is 125
+    maxOverlayOpacity?: number; // defaults to 0.3
+    minOverlayOpacity?: number; // defaults to 0
+    renderFixedForeground?: React.FC;
+    renderForeground?: React.FC;
+    renderHeader?: React.FC;
+    foregroundExtrapolate?: 'clamp' | 'extend' | 'identity' | undefined;
+    renderTouchableFixedForeground?: React.FC;
+    ScrollViewComponent?: React.ElementType<ScrollViewProps>;
+    scrollViewBackgroundColor?: string;
+    headerImage?: ImageSourcePropType;
+    useNativeDriver?: boolean; // defaults to false.
+    headerContainerStyle?: object;
+    fixedForegroundContainerStyles?: object;
+    disableHeaderGrow?: boolean;
+  }
+>;
 
 export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
   (
@@ -77,12 +86,12 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
     useImperativeHandle(ref, () => ({
       getChildContext: () => {
         return {
-          scrollY: scrollY,
+          scrollY,
           scrollPageY: pageY + minHeight,
         };
       },
     }));
-    const interpolateOnImageHeight = (outputRange: Array<number>) => {
+    const interpolateOnImageHeight = (outputRange: number[]) => {
       const headerScrollDistance = maxHeight - minHeight;
       return scrollY.interpolate({
         inputRange: [0, headerScrollDistance],
@@ -103,7 +112,7 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
           />
         );
       }
-      return renderHeaderProps();
+      return renderHeaderProps({});
     };
 
     const renderHeader = () => {
@@ -132,7 +141,7 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
           {Header()}
           {!disableOverlay && <Animated.View style={overlayStyle} />}
           <View style={[styles.fixedForeground, fixedForegroundContainerStyles]}>
-            {renderFixedForeground()}
+            {renderFixedForeground({})}
           </View>
         </Animated.View>
       );
@@ -156,7 +165,7 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
 
       return (
         <Animated.View style={[styles.header, headerTransformStyle]}>
-          {renderForegroundProps()}
+          {renderForegroundProps({})}
         </Animated.View>
       );
     };
@@ -179,7 +188,7 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
 
       return (
         <Animated.View style={[styles.header, styles.touchableFixedForeground, { height }]}>
-          {renderTouchableFixedForegroundProps()}
+          {renderTouchableFixedForegroundProps({})}
         </Animated.View>
       );
     };
@@ -195,7 +204,7 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
       });
     };
 
-    const onScroll = (e: any) => {
+    const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (onScrollProps) {
         onScrollProps(e);
       }
@@ -206,45 +215,53 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
 
     const inset = maxHeight - minHeight;
 
+    const contextValue: ImageHeaderContextType = useMemo(() => {
+      return {
+        scrollY,
+        scrollPageY: pageY + minHeight,
+      };
+    }, [scrollY, pageY, minHeight]);
+
     return (
-      <View
-        style={[
-          styles.container,
-          {
-            paddingTop: minHeight,
-            backgroundColor: scrollViewBackgroundColor,
-          },
-        ]}
-        ref={containerRef}
-        onLayout={onContainerLayout}
-      >
-        {renderHeader()}
-        <ScrollViewComponent
-          scrollEventThrottle={useNativeDriver ? 1 : 16}
-          ref={scrollViewRef}
-          overScrollMode="never"
-          {...scrollViewProps}
-          contentContainerStyle={[
+      <ImageHeaderContext.Provider value={contextValue}>
+        <View
+          style={[
+            styles.container,
             {
+              paddingTop: minHeight,
               backgroundColor: scrollViewBackgroundColor,
-              marginTop: inset,
-              paddingBottom: inset,
             },
-            contentContainerStyle,
-            childrenStyle,
           ]}
-          style={[styles.container, style]}
-          onScroll={
-            useNativeDriver
-              ? Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                  useNativeDriver: true,
-                })
-              : onScroll
-          }
-        />
-        {renderTouchableFixedForeground()}
-        {renderForeground()}
-      </View>
+          ref={containerRef}
+          onLayout={onContainerLayout}>
+          {renderHeader()}
+          <ScrollViewComponent
+            scrollEventThrottle={useNativeDriver ? 1 : 16}
+            ref={scrollViewRef}
+            overScrollMode="never"
+            {...scrollViewProps}
+            contentContainerStyle={[
+              {
+                backgroundColor: scrollViewBackgroundColor,
+                marginTop: inset,
+                paddingBottom: inset,
+              },
+              contentContainerStyle,
+              childrenStyle,
+            ]}
+            style={[styles.container, style]}
+            onScroll={
+              useNativeDriver
+                ? Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                    useNativeDriver: true,
+                  })
+                : onScroll
+            }
+          />
+          {renderTouchableFixedForeground()}
+          {renderForeground()}
+        </View>
+      </ImageHeaderContext.Provider>
     );
   }
 );

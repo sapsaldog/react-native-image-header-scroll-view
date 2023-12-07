@@ -1,35 +1,29 @@
 # react-native-image-header-scroll-view
 
-![badge](https://circleci.com/gh/bamlab/react-native-image-header-scroll-view.svg?style=shield&circle-token=:circle-token)
+This library originally from https://github.com/bamlab/react-native-image-header-scroll-view
+
+I encountered some issues because it is still using outdated dependencies, especially it used childContextType, so I replaced it with the context provider.
+
+I have confirmed that the modified library works well in my project.
 
 A ScrollView-like component that:
  - Has a fixed image header
  - Keep the image as a nav bar
  - Works on iOS and Android
 
-## Breaking changes
-
-### Version 1.0.0
-**/!\ Warning /!\\**
-The lib has been upgraded to match with new React and React Native standards (hooks, deprecated methods, etc...).
-The version 1.0.0 may contain some bugs or regressions. Ping me in issues if you notice a bad behaviour of the upgraded lib on your project.
-I advice you to update the lib in a separate commit to roll back if necessary.
-However the lib should work for most of cases, so don't be scared to update the lib.
-**It is a first step to improve the lib in the future, so please be understanding 😇**
-
 ## Installation
 
 ```
-$ npm install react-native-image-header-scroll-view --save
+$ npm install sapsaldog@react-native-image-header-scroll-view --save
 ```
 
 ## Demo
 
 ![react-native-image-header-scroll-view demo android](./readmeAssets/demoAndroid.gif)|![react-native-image-header-scroll-view demo ios](./readmeAssets/demoIos.gif)
 
-You can find this example code here : https://github.com/bamlab/react-native-image-header-scroll-view-example/blob/master/src/Pages/TvShow.js 
+You can find this example code here : https://github.com/bamlab/react-native-image-header-scroll-view-example/blob/master/src/Pages/TvShow.js
 
-## Basic Usage 
+## Basic Usage
 
 ```jsx
 import { ImageHeaderScrollView, TriggeringView } from 'react-native-image-header-scroll-view';
@@ -59,7 +53,7 @@ render() {
 }
 ```
 
-Result : 
+Result :
 
 ![Basic Usage](./readmeAssets/basicUsage.gif)
 
@@ -133,7 +127,7 @@ All of the properties of `View` are supported.
 
 Just set the `maxOverlayOpacity` to `0`.
 
-```jsx 
+```jsx
 <ImageHeaderScrollView
   minOverlayOpacity={0}
   maxOverlayOpacity={0}
@@ -144,21 +138,21 @@ Just set the `maxOverlayOpacity` to `0`.
 
 ### How to remove the image zomming on scroll down
 
-You have two solutions : 
+You have two solutions :
 
 1. You can use the `disableHeaderGrow` props. It will keep the ios elastic scroll effect.
-2. You can also use the `bounces={false}` props [from the scroll view](https://facebook.github.io/react-native/docs/scrollview#bounces). 
+2. You can also use the `bounces={false}` props [from the scroll view](https://facebook.github.io/react-native/docs/scrollview#bounces).
 
-Results : 
+Results :
 
-| `disableHeaderGrow` | `bounces={false}` | 
-| ------------------- | ----------------- | 
+| `disableHeaderGrow` | `bounces={false}` |
+| ------------------- | ----------------- |
 ![react-native-image-header-scroll-view demo disableHeaderGrow](./readmeAssets/demoDisableHeaderGrow.gif)|![react-native-image-header-scroll-view demo bounces](./readmeAssets/demoBounces.gif)
 
 
 ## Contributing
 
-All contributions are welcomed, that might be either adding new features, doing some refaco of the exisiting code or fixing bugs. 
+All contributions are welcomed, that might be either adding new features, doing some refaco of the exisiting code or fixing bugs.
 
 **How to contribute**
 

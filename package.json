@@ -37,23 +37,19 @@
   },
   "homepage": "https://github.com/bamlab/react-native-image-header-scroll-view#readme",
   "devDependencies": {
-    "@types/react": "^16.9.56",
-    "@types/react-native": "^0.63.35",
+    "@types/react": "~18.2.14",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
+    "@typescript-eslint/parser": "^5.59.11",
     "babel-eslint": "^10.1.0",
     "babel-preset-react-native": "4.0.0",
-    "eslint": "^7.13.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "eslint-plugin-react": "^7.21.5",
-    "eslint-plugin-react-native": "^3.10.0",
-    "prettier": "^1.10.2",
-    "react": "16.2.0",
-    "react-native": "0.52.2",
-    "typescript": "^4.0.5"
+    "eslint": "^8.42.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-native": "^4.1.0",
+    "prettier": "^2.8.8",
+    "react": "18.2.0",
+    "react-native": "0.72.6",
+    "typescript": "5.1.6"
   },
-  "peerDependencies": {
-    "react": ">=16.8.1",
-    "react-native": ">=0.59.0"
-  },
-  "dependencies": {},
   "types": "./lib/index.d.ts"
 }

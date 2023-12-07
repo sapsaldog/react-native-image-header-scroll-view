@@ -1,22 +1,18 @@
-import React, { FunctionComponent, MutableRefObject, useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
-import { View, Animated, ViewProps } from 'react-native';
+import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
+import { View, Animated, ViewProps, LayoutChangeEvent } from 'react-native';
+
+import { useImageHeaderContext } from './use-image-header-context';
 
 interface Props extends ViewProps {
-  onBeginHidden: Function;
-  onHide: Function;
-  onBeginDisplayed: Function;
-  onDisplay: Function;
-  onTouchTop: Function;
-  onTouchBottom: Function;
-  bottomOffset?: number;
+  onBeginHidden?: Function;
+  onHide?: Function;
+  onBeginDisplayed?: Function;
+  onDisplay?: Function;
+  onTouchTop?: Function;
+  onTouchBottom?: Function;
   topOffset?: number;
+  bottomOffset?: number;
 }
-
-type Context = {
-  scrollPageY?: number;
-  scrollY: Animated.Value;
-};
 
 export const TriggeringView: FunctionComponent<Props> = ({
   topOffset = 0,
@@ -27,20 +23,67 @@ export const TriggeringView: FunctionComponent<Props> = ({
   onBeginHidden,
   onTouchBottom,
   onTouchTop,
-  onLayout,
   children,
   ...viewProps
 }) => {
   const [initialPageY, setInitialPageY] = useState(0);
-  const ref = useRef<MutableRefObject<View>>(null).current;
+  const ref = useRef<View>();
   const [touched, setTouched] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [context, setContext] = useState<Context>({
-    scrollPageY: 0,
-    scrollY: new Animated.Value(0),
-  });
+
+  const context = useImageHeaderContext();
 
   const [height, setHeight] = useState(0);
+
+  const handleOnLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      const layout = e.nativeEvent.layout;
+      setHeight(layout.height);
+
+      ref.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
+        setInitialPageY(pageY);
+      });
+    },
+    [ref, setHeight, setInitialPageY]
+  );
+
+  const triggerEvents = useCallback(
+    (value: number, top: number, bottom: number) => {
+      if (!touched && value >= top + topOffset) {
+        setTouched(true);
+        onBeginHidden && onBeginHidden();
+        onTouchTop && onTouchTop(true);
+      } else if (touched && value < top + topOffset) {
+        setTouched(false);
+
+        onDisplay && onDisplay();
+        onTouchTop && onTouchTop(false);
+      }
+
+      if (!hidden && value >= bottom + bottomOffset) {
+        setHidden(true);
+        onHide && onHide();
+        onTouchBottom && onTouchBottom(true);
+      } else if (hidden && value < bottom + bottomOffset) {
+        setHidden(false);
+        onBeginDisplayed && onBeginDisplayed();
+        onTouchBottom && onTouchBottom(false);
+      }
+    },
+    [touched, hidden, topOffset, bottomOffset]
+  );
+
+  const onScroll: Animated.ValueListenerCallback = useCallback(
+    (event) => {
+      if (!context.scrollPageY) {
+        return;
+      }
+      const pageY = initialPageY - event.value;
+      triggerEvents(context.scrollPageY, pageY, pageY + height);
+    },
+    [context.scrollPageY, initialPageY, height, triggerEvents]
+  );
+
   useEffect(() => {
     if (!context.scrollY) {
       return;
@@ -50,53 +93,7 @@ export const TriggeringView: FunctionComponent<Props> = ({
     return () => {
       context.scrollY.removeListener(listenerId);
     };
-  }, []);
-
-  const handleOnLayout = (e: any) => {
-    if (onLayout) {
-      onLayout(e);
-    }
-    if (!ref) {
-      return;
-    }
-    const layout = e.nativeEvent.layout;
-    setHeight(layout.height);
-
-    ref.current.measure((_x, _y, _width, _height, _ageX, pageY) => {
-      setInitialPageY(pageY);
-    });
-  };
-
-  const onScroll = (event: any) => {
-    if (!context.scrollPageY) {
-      return;
-    }
-    const pageY = initialPageY - event.value;
-    triggerEvents(context.scrollPageY, pageY, pageY + height);
-  };
-
-  const triggerEvents = (value: number, top: number, bottom: number) => {
-    if (!touched && value >= top + topOffset) {
-      setTouched(true);
-      onBeginHidden();
-      onTouchTop(true);
-    } else if (touched && value < top + topOffset) {
-      setTouched(false);
-
-      onDisplay();
-      onTouchTop(false);
-    }
-
-    if (!hidden && value >= bottom + bottomOffset) {
-      setHidden(true);
-      onHide();
-      onTouchBottom(true);
-    } else if (hidden && value < bottom + bottomOffset) {
-      setHidden(false);
-      onBeginDisplayed();
-      onTouchBottom(false);
-    }
-  };
+  }, [context.scrollY, height, onScroll]);
 
   return (
     <View ref={ref} collapsable={false} {...viewProps} onLayout={handleOnLayout}>
