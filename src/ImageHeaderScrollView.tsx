@@ -233,7 +233,8 @@ export const ImageHeaderScrollView: FunctionComponent<Props> = forwardRef(
             },
           ]}
           ref={containerRef}
-          onLayout={onContainerLayout}>
+          onLayout={onContainerLayout}
+        >
           {renderHeader()}
           <ScrollViewComponent
             scrollEventThrottle={useNativeDriver ? 1 : 16}

@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
+import { FunctionComponent, LegacyRef, useCallback, useEffect, useRef, useState } from 'react';
 import { View, Animated, ViewProps, LayoutChangeEvent } from 'react-native';
 
 import { useImageHeaderContext } from './use-image-header-context';
@@ -96,7 +96,12 @@ export const TriggeringView: FunctionComponent<Props> = ({
   }, [context.scrollY, height, onScroll]);
 
   return (
-    <View ref={ref} collapsable={false} {...viewProps} onLayout={handleOnLayout}>
+    <View
+      ref={ref as LegacyRef<View> | undefined}
+      collapsable={false}
+      {...viewProps}
+      onLayout={handleOnLayout}
+    >
       {children}
     </View>
   );
